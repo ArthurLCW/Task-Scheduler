@@ -126,10 +126,8 @@ class task_scheduler(tk.Tk):
 
         self.label_track = tk.Label(master=self.frame3, text="The current tracked task is: None.")
         self.label_track.pack(ipady = 5)
-        self.start_btn = tk.Button(master=self.frame3, text='Start Timing', command=self.start_track)
-        self.start_btn.pack(side='left', anchor='w', ipadx=5)
-        self.pause_btn = tk.Button(master=self.frame3, text='Pause Timing', command=self.pause_track)
-        self.pause_btn.pack(side='left', anchor='w', ipadx=5)
+        self.timing_btn = tk.Button(master=self.frame3, text='Start Timing', command=self.time_track)
+        self.timing_btn.pack(side='left', anchor='w', ipadx=5)
         self.finish_btn = tk.Button(master=self.frame3, text='Finish Timing', command=self.finish_track)
         self.finish_btn.pack(side='left', anchor='w', ipadx=5)
 
@@ -158,7 +156,10 @@ class task_scheduler(tk.Tk):
         list_content = []
         for i in range(len(results)):
             list_content.append(str(results[i][0])+": "+str(results[i][1]) + ", ("+str(results[i][2]) + ")")
-        list_content.sort()
+        if not finished:
+            list_content.sort()
+        elif finished:
+            list_content.sort(reverse=True)
         for item in list_content:
             list_to_do.insert(tk.END, item)
 
@@ -173,8 +174,11 @@ class task_scheduler(tk.Tk):
             target_list = self.unfinished_task_list
 
         for i in range(target_list.size()):
-            if new_task_date <= target_list.get(i):
-                print(target_list.get(i))
+            if new_task_date <= target_list.get(i) and not finished:
+                target_list.insert(i, new_task_date)
+                flag = True
+                break
+            elif new_task_date > target_list.get(i) and finished:
                 target_list.insert(i, new_task_date)
                 flag = True
                 break
@@ -352,42 +356,46 @@ class task_scheduler(tk.Tk):
         if not flag:
             self.unfinished_task_list.insert(tk.END, new_msg)
 
-    def start_track(self):
-        if self.unfinished_task_list.curselection()==():
-            self.label_track['text'] = 'You have not chosen a task to track yet!'
-            self.tracked_idx = -1
-        else:
-            idx = self.unfinished_task_list.curselection()[0]
-            self.label_track['text'] = 'The current tracked task is (tracking): ' + self.unfinished_task_list.get(idx)
-            self.tracked_idx = idx
-            ###### needed to be changed. connect to db to obtain already tracked time
-            start_time_db = self.unfinished_task_list.get(idx)[self.unfinished_task_list.get(idx).find('(') + 1:self.unfinished_task_list.get(idx).find(')')]
-            if start_time_db=='NA':
-                start_time = dt.datetime(year=2021, month=1, day=1, hour=0, minute=0, second=0) # NEEDED to be modified
+    def time_track(self):
+        if self.timing_btn['text'] == 'Start Timing':
+            if self.unfinished_task_list.curselection() == ():
+                self.label_track['text'] = 'You have not chosen a task to track yet!'
+                self.tracked_idx = -1
             else:
-                start_time = dt.datetime(year=2021, month=1, day=1, hour=int(start_time_db[:start_time_db.find(':')]),
-                                         minute=int(start_time_db[start_time_db.find(':')+1: start_time_db.rfind(':')]),
-                                         second=int(start_time_db[start_time_db.rfind(':')+1:]))
-            text = '%s:%s:%s' % \
-                   ('{:0>2d}'.format(start_time.hour),
-                    '{:0>2d}'.format(start_time.minute),
-                    '{:0>2d}'.format(start_time.second))
-            self.tracked_time.set("Duration time: "+text)
-            self.track_flag = True
-            self.start_btn['text'] = 'Restart timing'
-
-    def pause_track(self):
-        if self.tracked_idx == -1:
-            self.label_track['text'] = 'You have not chosen a task to track.'
-        else:
-            if self.track_flag:
-                self.track_flag = False
-                self.pause_btn['text'] = 'Resume Timing'
-                self.set_track_time(self.tracked_idx)
-
-            elif not self.track_flag:
+                idx = self.unfinished_task_list.curselection()[0]
+                self.label_track['text'] = 'The current tracked task is (tracking): ' + self.unfinished_task_list.get(
+                    idx)
+                self.tracked_idx = idx
+                ###### needed to be changed. connect to db to obtain already tracked time
+                start_time_db = self.unfinished_task_list.get(idx)[
+                                self.unfinished_task_list.get(idx).find('(') + 1:self.unfinished_task_list.get(
+                                    idx).find(')')]
+                if start_time_db == 'NA':
+                    start_time = dt.datetime(year=2021, month=1, day=1, hour=0, minute=0,
+                                             second=0)  # NEEDED to be modified
+                else:
+                    start_time = dt.datetime(year=2021, month=1, day=1,
+                                             hour=int(start_time_db[:start_time_db.find(':')]),
+                                             minute=int(
+                                                 start_time_db[start_time_db.find(':') + 1: start_time_db.rfind(':')]),
+                                             second=int(start_time_db[start_time_db.rfind(':') + 1:]))
+                text = '%s:%s:%s' % \
+                       ('{:0>2d}'.format(start_time.hour),
+                        '{:0>2d}'.format(start_time.minute),
+                        '{:0>2d}'.format(start_time.second))
+                self.tracked_time.set("Duration time: " + text)
                 self.track_flag = True
-                self.pause_btn['text'] = 'Pause Timing'
+                self.timing_btn['text'] = 'Pause Timing'
+        elif self.timing_btn['text'] == 'Pause Timing':
+            if self.tracked_idx == -1:
+                self.label_track['text'] = 'You have not chosen a task to track.'
+            else:
+                self.track_flag = False
+                self.timing_btn['text'] = 'Resume Timing'
+                self.set_track_time(self.tracked_idx)
+        elif self.timing_btn['text'] == 'Resume Timing':
+            self.track_flag = True
+            self.timing_btn['text'] = 'Pause Timing'
 
     def finish_track(self):
         if self.tracked_idx == -1:
@@ -396,6 +404,7 @@ class task_scheduler(tk.Tk):
             # update db to store finishing time
             self.set_track_time(self.tracked_idx)
             self.track_flag = False
+            self.timing_btn['text'] = 'Start Timing'
             self.tracked_idx = -1
             self.tracked_time.set("Duration time: "+"00:00:00")
             self.label_track['text'] = 'The current tracked task is: None.'
@@ -408,7 +417,6 @@ class task_scheduler(tk.Tk):
         tracked_time_str = self.tracked_time.get()
         tracked_time_str = tracked_time_str.partition("Duration time: ")[2]
 
-            # print("tracked_time_str: ",tracked_time_str)
         h, rest = int(tracked_time_str.partition(':')[0]), tracked_time_str.partition(':')[2]
         m, rest = int(rest.partition(':')[0]), rest.partition(':')[2]
         s = int(rest)
@@ -428,4 +436,3 @@ class task_scheduler(tk.Tk):
 if __name__ == '__main__':
     task_scheduler = task_scheduler()
     task_scheduler.mainloop()
-    ###hahaha
