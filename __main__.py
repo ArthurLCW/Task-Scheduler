@@ -1,6 +1,7 @@
 import tkinter as tk
 import pymysql
 import datetime as dt
+from time import gmtime, strftime
 
 class task_scheduler(tk.Tk):
     def __init__(self):
@@ -66,10 +67,25 @@ class task_scheduler(tk.Tk):
         self.add_label_task.pack(side='left', anchor='w')
         self.add_entry_task = tk.Entry(master=self.frame2_01, width=50)
         self.add_entry_task.pack(side='right')
-        self.add_date_task = tk.Label(master=self.frame2_02, text="Date: ")
-        self.add_date_task.pack(side='left', anchor='w')
-        self.add_entry_date = tk.Entry(master=self.frame2_02, width=50)
-        self.add_entry_date.pack(side='right')
+
+        # self.add_date_task = tk.Label(master=self.frame2_02, text="Date: ")
+        # self.add_date_task.pack(side='left', anchor='w')
+        # self.add_entry_date = tk.Entry(master=self.frame2_02, width=50)
+        # self.add_entry_date.pack(side='right')
+        self.add_date_year = tk.Label(master=self.frame2_02, text="Year: ")
+        self.add_date_year.pack(side='left', anchor='w')
+        self.add_entry_year = tk.Entry(master=self.frame2_02, width=12)
+        self.add_entry_year.pack(side='left', anchor='w')
+
+        self.add_date_month = tk.Label(master=self.frame2_02, text=", Month: ")
+        self.add_date_month.pack(side='left', anchor='w')
+        self.add_entry_month = tk.Entry(master=self.frame2_02, width=11)
+        self.add_entry_month.pack(side='left', anchor='w')
+
+        self.add_date_day = tk.Label(master=self.frame2_02, text=", Day: ")
+        self.add_date_day.pack(side='left', anchor='w')
+        self.add_entry_day = tk.Entry(master=self.frame2_02, width=11)
+        self.add_entry_day.pack(side='right')
 
         self.frame2_01.pack()
         self.frame2_02.pack()
@@ -87,10 +103,24 @@ class task_scheduler(tk.Tk):
         self.edit_label_task.pack(side='left', anchor='w')
         self.edit_entry_task = tk.Entry(master=self.frame2_11, width=50)
         self.edit_entry_task.pack(side='right')
-        self.edit_date_task = tk.Label(master=self.frame2_12, text="Date: ")
-        self.edit_date_task.pack(side='left', anchor='w')
-        self.edit_entry_date = tk.Entry(master=self.frame2_12, width=50)
-        self.edit_entry_date.pack(side='right')
+        # self.edit_date_task = tk.Label(master=self.frame2_12, text="Date: ")
+        # self.edit_date_task.pack(side='left', anchor='w')
+        # self.edit_entry_date = tk.Entry(master=self.frame2_12, width=50)
+        # self.edit_entry_date.pack(side='right')
+        self.edit_date_year = tk.Label(master=self.frame2_12, text="Year: ")
+        self.edit_date_year.pack(side='left', anchor='w')
+        self.edit_entry_year = tk.Entry(master=self.frame2_12, width=12)
+        self.edit_entry_year.pack(side='left', anchor='w')
+
+        self.edit_date_month = tk.Label(master=self.frame2_12, text=", Month: ")
+        self.edit_date_month.pack(side='left', anchor='w')
+        self.edit_entry_month = tk.Entry(master=self.frame2_12, width=11)
+        self.edit_entry_month.pack(side='left', anchor='w')
+
+        self.edit_date_day = tk.Label(master=self.frame2_12, text=", Day: ")
+        self.edit_date_day.pack(side='left', anchor='w')
+        self.edit_entry_day = tk.Entry(master=self.frame2_12, width=11)
+        self.edit_entry_day.pack(side='right')
 
         self.frame2_11.pack()
         self.frame2_12.pack()
@@ -216,8 +246,6 @@ class task_scheduler(tk.Tk):
         sql = 'select FINISHED from date_task where TASK_DATE=\'%s\' AND TASK=\'%s\''
         self.cursor.execute(sql % (date, task))
         fin_state = not bool(self.cursor.fetchall()[0][0])
-        # print(sql % (date, task))
-        # print(self.cursor.fetchall())
 
         sql = 'UPDATE date_task SET FINISHED = %s WHERE TASK_DATE=\'%s\' AND TASK=\'%s\';'
         try:
@@ -226,16 +254,48 @@ class task_scheduler(tk.Tk):
         except:
             self.db.rollback()
 
+    def add_zero(self, str):
+        if str == '':
+            return ''
+        elif int(str) < 10:
+            return "0" + str
+        else:
+            return str
+
+    def date_from_entries(self, add_edit):
+        year, month, day = '', '', ''
+        if add_edit == 'add':
+            year, month, day = self.add_zero(self.add_entry_year.get()), self.add_zero(self.add_entry_month.get()), \
+                               self.add_zero(self.add_entry_day.get())
+        elif add_edit == "edit":
+            year, month, day = self.add_zero(self.edit_entry_year.get()), self.add_zero(self.edit_entry_month.get()), \
+                               self.add_zero(self.edit_entry_day.get())
+
+        if year == '':
+            year = strftime("%Y", gmtime())
+        if month == '':
+            month = strftime("%m", gmtime())
+        if day == '':
+            day = strftime("%d", gmtime())
+        return year + "-" + month + "-" + day
+
+
     def add_task(self):
         if self.tracked_idx != -1:
             self.add_delete_edit_label['text'] = 'Please finish timing first before adding task.'
             return
 
-        if self.add_entry_task.get() == '' or self.add_entry_date.get() == '':
-            self.add_delete_edit_label['text'] = 'Please input date and task if you need to add a task.'
-        else:
-            self.add_task_to_DB(finished=False, date=self.add_entry_date.get(), task=self.add_entry_task.get(), tracked_time='NA')
-            self.add_task_to_list_UI(finished=False, date=self.add_entry_date.get(), task=self.add_entry_task.get(), tracked_time='NA')
+        self.add_task_to_DB(finished=False, date=self.date_from_entries(add_edit='add'),
+                            task=self.add_entry_task.get(), tracked_time='NA')
+        self.add_task_to_list_UI(finished=False, date=self.date_from_entries(add_edit='add'),
+                                 task=self.add_entry_task.get(), tracked_time='NA')
+        self.add_delete_edit_label['text'] = 'Task ' + self.add_entry_task.get() + " added successfully"
+
+        # if self.add_entry_task.get() == '' or self.add_entry_date.get() == '':
+        #     self.add_delete_edit_label['text'] = 'Please input date and task if you need to add a task.'
+        # else:
+        #     self.add_task_to_DB(finished=False, date=self.add_entry_date.get(), task=self.add_entry_task.get(), tracked_time='NA')
+        #     self.add_task_to_list_UI(finished=False, date=self.add_entry_date.get(), task=self.add_entry_task.get(), tracked_time='NA')
 
     def edit_task(self):
         if self.tracked_idx!=-1:
@@ -248,7 +308,7 @@ class task_scheduler(tk.Tk):
             idx = self.unfinished_task_list.curselection()[0]
             self.add_delete_edit_label['text'] = ''
 
-            if self.edit_entry_task.get()=='' and self.edit_entry_date.get()=='':
+            if self.edit_entry_task.get()=='' and self.edit_entry_year.get()=='' and self.edit_entry_month.get()=='' and self.edit_entry_day.get()=='':
                 self.add_delete_edit_label['text'] = 'Please input date or task if you need to edit a task.'
             else:
                 delete_date = self.unfinished_task_list.get(idx)[:self.unfinished_task_list.get(idx).find(':')]
@@ -257,12 +317,12 @@ class task_scheduler(tk.Tk):
                 add_date = delete_date
                 add_task = delete_task
 
-                if self.edit_entry_date.get()=='':
+                if self.edit_entry_year.get()=='' and self.edit_entry_month.get()=='' and self.edit_entry_day.get()=='':
                     add_task = self.edit_entry_task.get()
                 elif self.edit_entry_task.get() == '':
-                    add_date = self.edit_entry_date.get()
+                    add_date = self.date_from_entries(add_edit='edit')
                 else:
-                    add_date = self.edit_entry_date.get()
+                    add_date = self.date_from_entries(add_edit='edit')
                     add_task = self.edit_entry_task.get()
                 new_task_date = add_date + ": " + add_task + ", (" + tracked_time + ")"
 
