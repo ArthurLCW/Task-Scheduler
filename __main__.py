@@ -68,10 +68,6 @@ class task_scheduler(tk.Tk):
         self.add_entry_task = tk.Entry(master=self.frame2_01, width=50)
         self.add_entry_task.pack(side='right')
 
-        # self.add_date_task = tk.Label(master=self.frame2_02, text="Date: ")
-        # self.add_date_task.pack(side='left', anchor='w')
-        # self.add_entry_date = tk.Entry(master=self.frame2_02, width=50)
-        # self.add_entry_date.pack(side='right')
         self.add_date_year = tk.Label(master=self.frame2_02, text="Year: ")
         self.add_date_year.pack(side='left', anchor='w')
         self.add_entry_year = tk.Entry(master=self.frame2_02, width=12)
@@ -103,10 +99,7 @@ class task_scheduler(tk.Tk):
         self.edit_label_task.pack(side='left', anchor='w')
         self.edit_entry_task = tk.Entry(master=self.frame2_11, width=50)
         self.edit_entry_task.pack(side='right')
-        # self.edit_date_task = tk.Label(master=self.frame2_12, text="Date: ")
-        # self.edit_date_task.pack(side='left', anchor='w')
-        # self.edit_entry_date = tk.Entry(master=self.frame2_12, width=50)
-        # self.edit_entry_date.pack(side='right')
+
         self.edit_date_year = tk.Label(master=self.frame2_12, text="Year: ")
         self.edit_date_year.pack(side='left', anchor='w')
         self.edit_entry_year = tk.Entry(master=self.frame2_12, width=12)
@@ -290,12 +283,6 @@ class task_scheduler(tk.Tk):
         self.add_task_to_list_UI(finished=False, date=self.date_from_entries(add_edit='add'),
                                  task=self.add_entry_task.get(), tracked_time='NA')
         self.add_delete_edit_label['text'] = 'Task ' + self.add_entry_task.get() + " added successfully"
-
-        # if self.add_entry_task.get() == '' or self.add_entry_date.get() == '':
-        #     self.add_delete_edit_label['text'] = 'Please input date and task if you need to add a task.'
-        # else:
-        #     self.add_task_to_DB(finished=False, date=self.add_entry_date.get(), task=self.add_entry_task.get(), tracked_time='NA')
-        #     self.add_task_to_list_UI(finished=False, date=self.add_entry_date.get(), task=self.add_entry_task.get(), tracked_time='NA')
 
     def edit_task(self):
         if self.tracked_idx!=-1:
